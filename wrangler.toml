@@ -2,6 +2,3 @@ name = "rss-worker"
 main = "src/worker.js"
 compatibility_date = "2026-05-23"
 compatibility_flags = ["nodejs_compat"]
-[[kv_namespaces]]
-binding = "COOKIE_KV"
-id = "71d7ea48f3fa449cbe4732b00b1945a9"
