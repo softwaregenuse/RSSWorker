@@ -228,10 +228,6 @@ let getItemFromDynamic = (card) => {
 
 let deal = async (ctx) => {
 	const { uid } = ctx.req.param();
-
-	const cookie = await getCookieHeader(ctx.env, 'bilibili.com');
-	console.log('Bilibili Cookie loaded:', !!cookie, 'length:', cookie.length);
-
 	let dynSpaceResJson = await GetDynSpace(uid);
 	let dynSpaceRes = JSON.parse(dynSpaceResJson);
 	let dynSpaceList = Array.isArray(dynSpaceRes.list) ? dynSpaceRes.list : [];
