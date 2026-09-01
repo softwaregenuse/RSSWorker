@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { basicAuth } from 'hono/basic-auth';
 import { cors } from 'hono/cors';
-
 import indexHtml from './html/index.html';
 import notFoundHtml from './html/404.html';
 import errorHtml from './html/err.html';
@@ -50,84 +49,69 @@ app.get('/debug/cookies', async (ctx) => {
 	});
 });
 
-app.get('/debug/bilibili-login', async (ctx) => {
-	const body = new URLSearchParams();
+app.get(
+	'/debug/bilibili-opus/:id',
+	async (ctx) => {
+		const id = ctx.req.param('id');
 
-	body.set(
-		'appkey',
-		'4409e2ce8ffd12b8'
-	);
+		const cookieData =
+			await ctx.env.COOKIE_KV.get(
+				'cookiecloud-all',
+				'json'
+			);
 
-	body.set(
-		'local_id',
-		'0'
-	);
+		const cookies =
+			cookieData?.cookie_data?.[
+				'bilibili.com'
+			] || [];
 
-	body.set(
-		'ts',
-		'0'
-	);
+		const cookie = cookies
+			.filter(
+				(x) =>
+					x &&
+					x.name &&
+					x.value !== undefined
+			)
+			.map(
+				(x) =>
+					`${x.name}=${x.value}`
+			)
+			.join('; ');
 
-	body.set(
-		'sign',
-		'e134154ed6add881d28fbdf68653cd9c'
-	);
+		const resp = await fetch(
+			`https://www.bilibili.com/opus/${id}`,
+			{
+				headers: {
+					Cookie: cookie,
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
+					Referer:
+						'https://www.bilibili.com/',
+				},
+			}
+		);
 
-	const resp = await fetch(
-		'https://passport.snm0516.aisee.tv/x/passport-tv-login/qrcode/auth_code',
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type':
-					'application/x-www-form-urlencoded',
-				'User-Agent':
-					'Mozilla/5.0 BiliDroid/8.3.0',
-			},
-			body: body.toString(),
-		}
-	);
+		const text = await resp.text();
 
-	const text = await resp.text();
-
-	let data = null;
-
-	try {
-		data = JSON.parse(text);
-	} catch (e) {
-		data = null;
-	}
-
-	if (!data) {
 		return ctx.json({
-			ok: false,
 			http_status: resp.status,
 			content_type:
 				resp.headers.get(
 					'content-type'
 				),
+			length: text.length,
 			body_start:
 				text.slice(0, 500),
 		});
 	}
-
-	return ctx.json({
-		ok: data.code === 0,
-		http_status: resp.status,
-		code: data.code,
-		message: data.message,
-		login_url:
-			data.data?.url || null,
-		auth_code:
-			data.data?.auth_code || null,
-	});
-});
+);
 
 app.notFound((ctx) => {
 	return ctx.html(notFoundHtml);
 });
 
 app.onError((err, c) => {
-	let stack_str = err.stack || String(err);
+	let stack_str = err.stack;
 
 	let stack_arr = stack_str
 		.split('\n')
