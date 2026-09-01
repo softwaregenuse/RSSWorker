@@ -17,9 +17,34 @@ app.get('/', (ctx) => {
 app.get('robots.txt', (ctx) => {
 	return ctx.text(robotsTxt);
 });
+
 app.get('/debug', (ctx) => {
 	return ctx.json(ctx.req.raw?.cf);
 });
+
+
+app.get('/debug/cookies', async (ctx) => {
+	const data = await ctx.env.COOKIE_KV.get('cookiecloud-all', 'json');
+
+	if (!data) {
+		return ctx.json({
+			ok: false,
+			message: 'cookiecloud-all not found',
+		});
+	}
+
+	return ctx.json({
+		ok: true,
+		update_time: data.update_time,
+		cookie_domains: Object.keys(data.cookie_data || {}),
+		local_storage_domains: Object.keys(data.local_storage_data || {}),
+	});
+});
+
+
+
+
+
 app.notFound((ctx) => {
 	return ctx.html(notFoundHtml);
 });
