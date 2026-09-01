@@ -482,6 +482,31 @@ let deal = async (ctx) => {
 	const { uid } =
 		ctx.req.param();
 
+	const cache =
+		caches.default;
+
+	const cacheUrl =
+		new URL(ctx.req.url);
+
+	cacheUrl.search = '';
+
+	const cacheRequest =
+		new Request(
+			cacheUrl.toString(),
+			{
+				method: 'GET',
+			}
+		);
+
+	const cachedResponse =
+		await cache.match(
+			cacheRequest
+		);
+
+	if (cachedResponse) {
+		return cachedResponse;
+	}
+
 	let dynSpaceResJson =
 		await GetDynSpace(uid);
 
@@ -542,17 +567,52 @@ let deal = async (ctx) => {
 	let rss =
 		renderRss2(data);
 
-	ctx.header(
-		'Content-Type',
-		'application/rss+xml; charset=utf-8'
+	const response =
+		new Response(
+			rss,
+			{
+				status: 200,
+
+				headers: {
+					'Content-Type':
+						'application/rss+xml; charset=utf-8',
+
+					'Cache-Control':
+						'public, max-age=300',
+
+					'X-RSSWorker-Cache':
+						'MISS',
+				},
+			}
+		);
+
+	const cacheResponse =
+		new Response(
+			rss,
+			{
+				status: 200,
+
+				headers: {
+					'Content-Type':
+						'application/rss+xml; charset=utf-8',
+
+					'Cache-Control':
+						'public, max-age=300',
+
+					'X-RSSWorker-Cache':
+						'HIT',
+				},
+			}
+		);
+
+	ctx.executionCtx.waitUntil(
+		cache.put(
+			cacheRequest,
+			cacheResponse
+		)
 	);
 
-	ctx.header(
-		'Cache-Control',
-		'public, max-age=60'
-	);
-
-	return ctx.body(rss);
+	return response;
 };
 
 let setup = (route) => {
