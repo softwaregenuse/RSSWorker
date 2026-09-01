@@ -372,6 +372,12 @@ let getPaidDebugInfo = (card) => {
 		dyn_id:
 			card.extend?.dynIdStr || '',
 
+		dyn_type:
+			card.extend?.dynType ?? null,
+
+		business_id:
+			card.extend?.businessId ?? null,
+
 		card_type:
 			card.cardType || '',
 
