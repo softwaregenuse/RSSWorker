@@ -25,10 +25,7 @@ app.get('/debug', (ctx) => {
 });
 
 app.get('/debug/cookies', async (ctx) => {
-	const data = await ctx.env.COOKIE_KV.get(
-		'cookiecloud-all',
-		'json'
-	);
+	const data = await ctx.env.COOKIE_KV.get('cookiecloud-all', 'json');
 
 	if (!data) {
 		return ctx.json({
@@ -40,71 +37,70 @@ app.get('/debug/cookies', async (ctx) => {
 	return ctx.json({
 		ok: true,
 		update_time: data.update_time,
-		cookie_domains: Object.keys(
-			data.cookie_data || {}
-		),
-		local_storage_domains: Object.keys(
-			data.local_storage_data || {}
-		),
+		cookie_domains: Object.keys(data.cookie_data || {}),
+		local_storage_domains: Object.keys(data.local_storage_data || {}),
 	});
 });
 
-app.get(
-	'/debug/bilibili-opus/:id',
-	async (ctx) => {
-		const id = ctx.req.param('id');
+app.get('/debug/bilibili/:uid', async (ctx) => {
+	const uid = ctx.req.param('uid');
 
-		const cookieData =
-			await ctx.env.COOKIE_KV.get(
-				'cookiecloud-all',
-				'json'
-			);
+	const cookieData = await ctx.env.COOKIE_KV.get(
+		'cookiecloud-all',
+		'json'
+	);
 
-		const cookies =
-			cookieData?.cookie_data?.[
-				'bilibili.com'
-			] || [];
+	const cookies =
+		cookieData?.cookie_data?.['bilibili.com'] || [];
 
-		const cookie = cookies
-			.filter(
-				(x) =>
-					x &&
-					x.name &&
-					x.value !== undefined
-			)
-			.map(
-				(x) =>
-					`${x.name}=${x.value}`
-			)
-			.join('; ');
+	const cookie = cookies
+		.filter(
+			(x) =>
+				x &&
+				x.name &&
+				x.value !== undefined
+		)
+		.map((x) => `${x.name}=${x.value}`)
+		.join('; ');
 
-		const resp = await fetch(
-			`https://www.bilibili.com/opus/${id}`,
-			{
-				headers: {
-					Cookie: cookie,
-					'User-Agent':
-						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
-					Referer:
-						'https://www.bilibili.com/',
-				},
-			}
-		);
+	const resp = await fetch(
+		`https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?host_mid=${uid}`,
+		{
+			headers: {
+				Cookie: cookie,
+				'User-Agent':
+					'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
+				Referer:
+					`https://space.bilibili.com/${uid}/dynamic`,
+			},
+		}
+	);
 
-		const text = await resp.text();
+	const text = await resp.text();
 
-		return ctx.json({
-			http_status: resp.status,
-			content_type:
-				resp.headers.get(
-					'content-type'
-				),
-			length: text.length,
-			body_start:
-				text.slice(0, 500),
-		});
+	let data = null;
+
+	try {
+		data = JSON.parse(text);
+	} catch (e) {
+		data = null;
 	}
-);
+
+	return ctx.json({
+		http_status: resp.status,
+		content_type:
+			resp.headers.get('content-type'),
+		is_json: !!data,
+		code: data?.code,
+		message: data?.message,
+		item_count:
+			data?.data?.items?.length || 0,
+		body_start:
+			data
+				? undefined
+				: text.slice(0, 300),
+	});
+});
 
 app.notFound((ctx) => {
 	return ctx.html(notFoundHtml);
@@ -112,7 +108,6 @@ app.notFound((ctx) => {
 
 app.onError((err, c) => {
 	let stack_str = err.stack;
-
 	let stack_arr = stack_str
 		.split('\n')
 		.join('<br>');
