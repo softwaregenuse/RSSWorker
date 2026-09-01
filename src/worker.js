@@ -42,43 +42,6 @@ app.get('/debug/cookies', async (ctx) => {
 });
 
 
-app.get('/debug/bilibili/:uid', async (ctx) => {
-	const uid = ctx.req.param('uid');
-	const cookieData = await ctx.env.COOKIE_KV.get('cookiecloud-all', 'json');
-
-	const cookies = cookieData?.cookie_data?.['bilibili.com'] || [];
-	const cookie = cookies
-		.filter((x) => x?.name && x?.value !== undefined)
-		.map((x) => `${x.name}=${x.value}`)
-		.join('; ');
-
-	const resp = await fetch(
-		`https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?host_mid=${uid}`,
-		{
-			headers: {
-				'Cookie': cookie,
-				'User-Agent': 'Mozilla/5.0',
-				'Referer': `https://space.bilibili.com/${uid}/dynamic`,
-			},
-		}
-	);
-
-	const data = await resp.json();
-
-	return ctx.json({
-		http_status: resp.status,
-		code: data.code,
-		message: data.message,
-		item_count: data.data?.items?.length || 0,
-		items: data.data?.items || [],
-	});
-});
-
-
-
-
-
-
 
 
 
