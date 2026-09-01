@@ -1,6 +1,5 @@
 import { renderRss2 } from '../../../utils/util';
 import { GetDynSpace } from '../grpc_helper';
-import { getCookieHeader } from '../../cookiecloud';
 
 let getPubDate = (ptimeLabelText) => {
 	let pubDate = new Date().toUTCString();
