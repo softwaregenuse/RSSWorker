@@ -4,6 +4,10 @@ import {
 	GetOpusDetail,
 } from '../grpc_helper';
 
+import {
+	getCookieHeader,
+} from '../../cookiecloud';
+
 let getPubDate = (ptimeLabelText) => {
 	let pubDate = new Date().toUTCString();
 
@@ -730,6 +734,110 @@ let getOpusDebugInfo = (
 	};
 };
 
+let getWebDebugInfo = (
+	responseJson
+) => {
+	let data =
+		responseJson?.data || null;
+
+	let item =
+		data?.item || null;
+
+	let modules =
+		item?.modules || null;
+
+	let moduleKeys =
+		modules &&
+		typeof modules === 'object'
+			? Object.keys(modules)
+			: [];
+
+	let descTextLength = 0;
+
+	let dynamic =
+		modules?.module_dynamic || null;
+
+	let desc =
+		modules?.module_desc || null;
+
+	if (
+		typeof desc?.text === 'string'
+	) {
+		descTextLength +=
+			desc.text.length;
+	}
+
+	if (
+		typeof dynamic?.desc?.text ===
+		'string'
+	) {
+		descTextLength +=
+			dynamic.desc.text.length;
+	}
+
+	let imageCount = 0;
+
+	let candidates = [
+		dynamic?.major?.draw?.items,
+		dynamic?.major?.opus?.pics,
+		dynamic?.major?.opus?.pics?.items,
+	];
+
+	for (let candidate of candidates) {
+		if (
+			Array.isArray(candidate)
+		) {
+			imageCount +=
+				candidate.length;
+		}
+	}
+
+	return {
+		code:
+			responseJson?.code ??
+			null,
+
+		message:
+			responseJson?.message ??
+			null,
+
+		has_data:
+			!!data,
+
+		has_item:
+			!!item,
+
+		item_id:
+			item?.id_str ??
+			null,
+
+		item_keys:
+			item
+				? Object.keys(item)
+				: [],
+
+		module_keys:
+			moduleKeys,
+
+		has_module_dynamic:
+			!!dynamic,
+
+		has_module_desc:
+			!!desc,
+
+		desc_text_length:
+			descTextLength,
+
+		image_count:
+			imageCount,
+
+		module_dynamic_keys:
+			dynamic
+				? Object.keys(dynamic)
+				: [],
+	};
+};
+
 let deal = async (ctx) => {
 	const { uid } =
 		ctx.req.param();
@@ -918,6 +1026,112 @@ let deal = async (ctx) => {
 				grpc_status:
 					e?.grpcStatus ??
 					null,
+			});
+		}
+	}
+
+	if (
+		ctx.req.query('debug') ===
+		'webopus'
+	) {
+		const targetDynId =
+			ctx.req.query('id') ||
+			'1241441373290233861';
+
+		try {
+			const cookieHeader =
+				await getCookieHeader(
+					ctx.env,
+					'api.bilibili.com'
+				);
+
+			const params =
+				new URLSearchParams({
+					id:
+						targetDynId,
+
+					platform:
+						'web',
+
+					gaia_source:
+						'main_web',
+
+					features:
+						'itemOpusStyle,opusBigCover,listOnlyfans,onlyfansVote,endFooterHidden,decorationCard,onlyfansAssetsV2,ugcDelete,onlyfansQaCard,commentsNewVersion',
+				});
+
+			const url =
+				`https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?${params.toString()}`;
+
+			const response =
+				await fetch(
+					url,
+					{
+						headers: {
+							'User-Agent':
+								'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+
+							'Referer':
+								`https://www.bilibili.com/opus/${targetDynId}`,
+
+							'Accept':
+								'application/json, text/plain, */*',
+
+							'Cookie':
+								cookieHeader,
+						},
+					}
+				);
+
+			const responseText =
+				await response.text();
+
+			let responseJson =
+				null;
+
+			try {
+				responseJson =
+					JSON.parse(
+						responseText
+					);
+			} catch (e) {}
+
+			return ctx.json({
+				ok:
+					response.ok,
+
+				target_dyn_id:
+					targetDynId,
+
+				http_status:
+					response.status,
+
+				cookie_loaded:
+					!!cookieHeader,
+
+				response_is_json:
+					!!responseJson,
+
+				response_text_length:
+					responseText.length,
+
+				web_debug:
+					responseJson
+						? getWebDebugInfo(
+							responseJson
+						)
+						: null,
+			});
+		} catch (e) {
+			return ctx.json({
+				ok: false,
+
+				target_dyn_id:
+					targetDynId,
+
+				error:
+					e?.message ||
+					String(e),
 			});
 		}
 	}
