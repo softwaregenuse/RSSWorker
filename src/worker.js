@@ -63,22 +63,17 @@ app.get('/debug/bilibili/:uid', async (ctx) => {
 		}
 	);
 
-	const text = await resp.text();
-
-	let data = null;
-	try {
-		data = JSON.parse(text);
-	} catch (e) {}
+	const data = await resp.json();
 
 	return ctx.json({
 		http_status: resp.status,
-		content_type: resp.headers.get('content-type'),
-		is_json: !!data,
-		code: data?.code,
-		message: data?.message,
-		item_count: data?.data?.items?.length || 0,
-		body_start: data ? undefined : text.slice(0, 300),
+		code: data.code,
+		message: data.message,
+		item_count: data.data?.items?.length || 0,
+		items: data.data?.items || [],
+	});
 });
+
 
 
 
