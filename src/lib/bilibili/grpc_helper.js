@@ -42,7 +42,7 @@ let getRandomBuvid = () => {
 
 let getBilibiliMetadata = (accessKey, buvid) => {
 	const METADATA = {
-		// accessKey: accessKey,
+		accessKey: accessKey,
 		mobiApp: 'android',
 		device: 'phone',
 		build: 7490200,
