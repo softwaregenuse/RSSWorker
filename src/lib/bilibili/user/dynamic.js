@@ -557,6 +557,11 @@ let getPaidDebugInfo = (card) => {
 				?.onlyFansProperty
 				?.isOnlyFans,
 
+		has_privilege:
+			!!card.extend
+				?.onlyFansProperty
+				?.hasPrivilege,
+
 		module_types:
 			moduleTypes,
 
@@ -629,6 +634,8 @@ let getOpusDebugInfo = (
 
 	let moduleKeys = [];
 
+	let blockedStyles = [];
+
 	for (let mod of modules) {
 		if (mod?.moduleType) {
 			moduleTypes.push(
@@ -647,6 +654,12 @@ let getOpusDebugInfo = (
 			'module_blocked'
 		) {
 			moduleBlockedCount++;
+
+			blockedStyles.push(
+				mod.moduleBlocked
+					?.blockStyle ??
+					null
+			);
 		}
 
 		if (
@@ -697,6 +710,9 @@ let getOpusDebugInfo = (
 
 		module_blocked_count:
 			moduleBlockedCount,
+
+		blocked_styles:
+			blockedStyles,
 
 		module_desc_text_length:
 			moduleDescTextLength,
@@ -856,6 +872,11 @@ let deal = async (ctx) => {
 					card_type:
 						paidCard.cardType ||
 						'',
+
+					has_privilege:
+						!!paidCard.extend
+							?.onlyFansProperty
+							?.hasPrivilege,
 				},
 
 				opus_debug:
@@ -883,6 +904,11 @@ let deal = async (ctx) => {
 					card_type:
 						paidCard.cardType ||
 						'',
+
+					has_privilege:
+						!!paidCard.extend
+							?.onlyFansProperty
+							?.hasPrivilege,
 				},
 
 				error:
