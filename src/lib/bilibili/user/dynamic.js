@@ -328,25 +328,60 @@ let getItemFromDynamicDraw = (
 	let title = '';
 	let description = '';
 
+	// 优先读取新版图文动态的标题
+	const opusSummary =
+		card.extend?.opusSummary;
+
 	for (
-		let mod of
-			card.modules || []
+		let node of
+			opusSummary
+				?.title
+				?.text
+				?.nodes || []
 	) {
-		if (
-			mod.moduleType ===
-			'module_desc'
+		title +=
+			node?.rawText ||
+			node?.word?.words ||
+			'';
+	}
+
+	// 读取新版图文动态正文
+	for (
+		let node of
+			opusSummary
+				?.summary
+				?.text
+				?.nodes || []
+	) {
+		description +=
+			node?.rawText ||
+			node?.word?.words ||
+			'';
+	}
+
+	// 兼容旧类型 module_desc
+	if (!description) {
+		for (
+			let mod of
+				card.modules || []
 		) {
-			let text =
-				mod.moduleDesc?.text || '';
+			if (
+				mod.moduleType ===
+				'module_desc'
+			) {
+				let text =
+					mod.moduleDesc?.text || '';
 
-			if (!title) {
-				title = text;
+				if (!title) {
+					title = text;
+				}
+
+				description += text;
 			}
-
-			description += text;
 		}
 	}
 
+	// 兼容旧字段 origDesc
 	if (!title) {
 		for (
 			let desc of
@@ -357,6 +392,17 @@ let getItemFromDynamicDraw = (
 		}
 	}
 
+	if (!description) {
+		for (
+			let desc of
+				card.extend?.origDesc || []
+		) {
+			description +=
+				desc?.text || '';
+		}
+	}
+
+	// 图片
 	for (
 		let cover of
 			card.extend
@@ -370,7 +416,8 @@ let getItemFromDynamicDraw = (
 	}
 
 	if (!title) {
-		title = '哔哩哔哩图文动态';
+		title =
+			'哔哩哔哩图文动态';
 	}
 
 	if (!description) {
