@@ -578,10 +578,14 @@ let deal = async (ctx) => {
 						'application/rss+xml; charset=utf-8',
 
 					'Cache-Control':
-						'public, max-age=300',
+						items.length > 0
+							? 'public, max-age=300'
+							: 'no-store, no-cache, must-revalidate',
 
 					'X-RSSWorker-Cache':
-						'MISS',
+						items.length > 0
+							? 'MISS'
+							: 'BYPASS-EMPTY',
 				},
 			}
 		);
@@ -605,12 +609,14 @@ let deal = async (ctx) => {
 			}
 		);
 
-	ctx.executionCtx.waitUntil(
-		cache.put(
-			cacheRequest,
-			cacheResponse
-		)
-	);
+	if (items.length > 0) {
+		ctx.executionCtx.waitUntil(
+			cache.put(
+				cacheRequest,
+				cacheResponse
+			)
+		);
+	}
 
 	return response;
 };
