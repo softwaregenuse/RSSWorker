@@ -560,6 +560,26 @@ let deal = async (ctx) => {
 		let card of
 			dynSpaceList
 	) {
+		if (
+			debug === 'card' &&
+			card.extend?.dynIdStr ===
+				'1243024786046582787'
+		) {
+			return new Response(
+				JSON.stringify(
+					card,
+					null,
+					2
+				),
+				{
+					headers: {
+						'Content-Type':
+							'application/json; charset=utf-8',
+					},
+				}
+			);
+		}
+
 		items.push(
 			getItemFromDynamic(
 				card
