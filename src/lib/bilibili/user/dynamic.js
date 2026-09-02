@@ -3,7 +3,7 @@ import { GetDynSpace } from '../grpc_helper';
 
 let getPubDate = (ptimeLabelText) => {
 	let pubDate = new Date().toUTCString();
-ss
+	
 	try {
 		if (!ptimeLabelText) {
 			return pubDate;
