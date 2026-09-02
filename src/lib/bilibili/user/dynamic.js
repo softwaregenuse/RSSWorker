@@ -1,5 +1,9 @@
 import { renderRss2 } from '../../../utils/util';
-import { GetDynSpace } from '../grpc_helper';
+import {
+	GetDynSpace,
+	GetOpusDetail,
+} from '../grpc_helper';
+
 
 let getPubDate = (ptimeLabelText) => {
 	let pubDate = new Date().toUTCString();
@@ -481,6 +485,34 @@ let getItemFromDynamic = (
 let deal = async (ctx) => {
 	const { uid } =
 		ctx.req.param();
+
+	const debug =
+		ctx.req.query('debug');
+
+	const debugId =
+		ctx.req.query('id');
+
+	if (
+		debug === 'detail' &&
+		debugId
+	) {
+		const detailJson =
+			await GetOpusDetail(
+				debugId,
+				2
+			);
+
+		return new Response(
+			detailJson,
+			{
+				headers: {
+					'Content-Type':
+						'application/json; charset=utf-8',
+				},
+			}
+		);
+	}
+
 
 	const cache =
 		caches.default;
