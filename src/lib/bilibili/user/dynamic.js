@@ -530,14 +530,18 @@ let deal = async (ctx) => {
 			}
 		);
 
-	const cachedResponse =
-		await cache.match(
-			cacheRequest
-		);
+	if (!debug) {
+		const cachedResponse =
+			await cache.match(
+				cacheRequest
+			);
 
-	if (cachedResponse) {
-		return cachedResponse;
+		if (cachedResponse) {
+			return cachedResponse;
+		}
 	}
+
+
 
 	let dynSpaceResJson =
 		await GetDynSpace(uid);
