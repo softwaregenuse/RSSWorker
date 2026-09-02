@@ -1,13 +1,9 @@
 import { renderRss2 } from '../../../utils/util';
-import {
-	GetDynSpace,
-	GetOpusDetail,
-} from '../grpc_helper';
-
+import { GetDynSpace } from '../grpc_helper';
 
 let getPubDate = (ptimeLabelText) => {
 	let pubDate = new Date().toUTCString();
-
+ss
 	try {
 		if (!ptimeLabelText) {
 			return pubDate;
@@ -533,32 +529,6 @@ let deal = async (ctx) => {
 	const { uid } =
 		ctx.req.param();
 
-	const debug =
-		ctx.req.query('debug');
-
-	const debugId =
-		ctx.req.query('id');
-
-	if (
-		debug === 'detail' &&
-		debugId
-	) {
-		const detailJson =
-			await GetOpusDetail(
-				debugId,
-				2
-			);
-
-		return new Response(
-			detailJson,
-			{
-				headers: {
-					'Content-Type':
-						'application/json; charset=utf-8',
-				},
-			}
-		);
-	}
 
 
 	const cache =
@@ -577,15 +547,13 @@ let deal = async (ctx) => {
 			}
 		);
 
-	if (!debug) {
-		const cachedResponse =
-			await cache.match(
-				cacheRequest
-			);
+	const cachedResponse =
+		await cache.match(
+			cacheRequest
+		);
 
-		if (cachedResponse) {
-			return cachedResponse;
-		}
+	if (cachedResponse) {
+		return cachedResponse;
 	}
 
 
@@ -611,25 +579,6 @@ let deal = async (ctx) => {
 		let card of
 			dynSpaceList
 	) {
-		if (
-			debug === 'card' &&
-			card.extend?.dynIdStr ===
-				'1243024786046582787'
-		) {
-			return new Response(
-				JSON.stringify(
-					card,
-					null,
-					2
-				),
-				{
-					headers: {
-						'Content-Type':
-							'application/json; charset=utf-8',
-					},
-				}
-			);
-		}
 
 		items.push(
 			getItemFromDynamic(
